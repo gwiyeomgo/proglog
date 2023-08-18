@@ -1,15 +1,16 @@
 package server
 
+/* package server
+
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"net/http"
 )
 
-/*
+
 gorilla/mux 으로 rest api 만들기
 https://github.com/gorilla/mux
-*/
 
 type httpServer struct {
 	Log *Log
@@ -104,3 +105,4 @@ func (s *httpServer) handleConsume(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+*/

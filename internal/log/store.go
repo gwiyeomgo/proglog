@@ -15,6 +15,7 @@ var (
 // 레코드 길이를 저장하는 바이트 개수
 const lenWidth = 8
 
+// 저장 파일 : 레코드를 저장하는 파일
 type store struct {
 	*os.File
 	mu   sync.Mutex
@@ -61,6 +62,7 @@ func (s *store) Append(p []byte) (n uint64, pos uint64, err error) {
 func (s *store) Read(pos uint64) ([]byte, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	// 읽으려는 레코드가 아직 버퍼에 있을 때를 대비해서 우선은 쓰기 버퍼의 내용을 플래시해서 디스크에 쓴다
 	if err := s.buf.Flush(); err != nil {
 		return nil, err
 	}
@@ -84,6 +86,7 @@ func (s *store) ReadAt(p []byte, off int64) (int, error) {
 	return s.File.ReadAt(p, off)
 }
 
+// 파일을 닫기 전 버퍼의 데이터를 파일에 쓴다
 func (s *store) Close() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()

@@ -9,6 +9,7 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+// 세그먼트 :저장 파일과 인덱스 파일을 묶어서 말하는 추상적 개념
 type segment struct {
 	store                  *store
 	index                  *index

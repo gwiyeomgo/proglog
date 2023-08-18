@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package log.v1;
+// 경로는 실제 배포시 적용될 것으로 해준다
+// 프로젝트 이름이 "proglog"라면 경로를 이와 같이 설정
+option go_package =  "github.com/gwiyeomgo/proglog/api/log_v1";
+//레코드: 로그에 저장한 데이터
+message Record {
+  bytes  value =1;
+  uint64 offset =2;
+}

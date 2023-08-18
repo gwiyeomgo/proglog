@@ -14,12 +14,11 @@ import (
 	api "github.com/gwiyeomgo/proglog/api/v1"
 )
 
+// 로그 : 모든 세그먼트를 묶어서 말하는 추상적 개념
 type Log struct {
-	mu sync.RWMutex
-
-	Dir    string
-	Config Config
-
+	mu            sync.RWMutex
+	Dir           string
+	Config        Config
 	activeSegment *segment
 	segments      []*segment
 }

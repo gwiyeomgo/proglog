@@ -14,6 +14,7 @@ var (
 	entWidth        = offWidth + posWidth
 )
 
+// 인덱스를 저장하는 파일
 type index struct {
 	file *os.File
 	mmap gommap.MMap
