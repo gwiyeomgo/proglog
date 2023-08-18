@@ -1,4 +1,4 @@
-module github.com/gwiyeomgo/prolog
+module github.com/gwiyeomgo/proglog
 
 go 1.19
 

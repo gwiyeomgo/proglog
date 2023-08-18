@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/gwiyeomgo/prolog/internal/server"
+	"github.com/gwiyeomgo/proglog/internal/server"
 	"log"
 )
 
