@@ -1,5 +1,11 @@
 
+compile1:
+protoc api/v1/log.proto --go_out=. --go_opt=paths=source_relative --proto_path=.
 
+compile2:
+protoc --go_out=. --go_opt=paths=source_relative \
+--go-grpc_out=. --go-grpc_opt=paths=source_relative \
+api/v1/log.proto
 
 
 ## log 라이브러리 
@@ -22,3 +28,31 @@ protoc --go_out=. --go_opt=paths=source_relative \
 ```
 
 ### grpc 서버 생성
+
+### 서비스 보안의 세단계
+    * 주고받는 데이터 암호화(중간자 공격 ex)도청)
+        * 중간자 공격으로부터 막아주는,가장 널리 쓰이는 암호학 방법 TLS
+        * TLS 는 단방향 인증으로 서버만 인증
+        
+> go install github.com/cloudflare/cfssl/cmd/cfssl@latest
+
+> go install github.com/cloudflare/cfssl/cmd/cfssljson@latest
+    ca-csr.json : ca 인증서 설정
+    ca-config.json : ca가 어떤 인증서를 발행할지 설정(정책 설정)
+    server-csr.json : 서버 인증서 설정
+
+
+    * 클라이언트 인증 = 클라이언트가 누군지 확인
+        * 애플리케이션에서 사용자명,비밀번호와 토큰의 조합으로 구현
+    * 인증한 클라이언트의 권한을 결정
+        인증와 권한결정(인가)
+
+
+https://github.com/casbin/casbin
+
+### 환경변수
+HOME
+
+CONFIG_PATH : 인증서를 저장할 위치
+CONFIG_DIR : 설정 파일들의 경로
+ex) ./test
