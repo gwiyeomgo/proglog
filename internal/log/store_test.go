@@ -12,11 +12,14 @@ var (
 	width = uint64(len(write)) + lenWidth
 )
 
+// 저장파일에 추가/읽기 테스트
 func TeststoreAppendRead(t *testing.T) {
+	//임시파일을 생성
 	f, err := os.CreateTemp("", "store_append_read_test")
 	require.NoError(t, err)
+	//함수가 끝나면 파일 삭제
 	defer os.Remove(f.Name())
-
+	//저장파일 생성
 	s, err := newStore(f)
 	require.NoError(t, err)
 
@@ -32,6 +35,7 @@ func TeststoreAppendRead(t *testing.T) {
 }
 
 func testAppend(t *testing.T, s *store) {
+	// 이 함수를 테스트 헬퍼로 표시
 	t.Helper()
 	for i := uint64(1); i < 4; i++ {
 		n, pos, err := s.Append(write)

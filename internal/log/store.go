@@ -26,9 +26,9 @@ type store struct {
 /*
 bufio.Writer는 파일에 데이터를 쓸 때 내부적으로 버퍼링하여 여러 작은 쓰기 작업을 묶어서 한 번에 큰 덩어리로 보내는 것을 가능
 */
-
 func newStore(f *os.File) (*store, error) {
-	fi, err := os.Stat(f.Name()) //주어진 파일 또는 디렉토리의 정보를 조회
+	//주어진 파일 또는 디렉토리의 정보를 조회
+	fi, err := os.Stat(f.Name())
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,9 @@ func newStore(f *os.File) (*store, error) {
 
 func (s *store) Append(p []byte) (n uint64, pos uint64, err error) {
 	/*
-		이 패턴을 사용하는 이유는 동시에 여러 고루틴이 공유 자원에 접근할 때 경쟁 조건을 방지하고, 데이터의 일관성과 안정성을 보장
+		이 패턴을 사용하는 이유는
+		동시에 여러 고루틴이 공유 자원에 접근할 때 경쟁 조건을 방지하고,
+		데이터의 일관성과 안정성을 보장
 	*/
 	s.mu.Lock()         //잠금
 	defer s.mu.Unlock() //해제
@@ -62,11 +64,14 @@ func (s *store) Append(p []byte) (n uint64, pos uint64, err error) {
 func (s *store) Read(pos uint64) ([]byte, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	// 읽으려는 레코드가 아직 버퍼에 있을 때를 대비해서 우선은 쓰기 버퍼의 내용을 플래시해서 디스크에 쓴다
+	// 읽으려는 레코드가 아직 버퍼에 있을 때를 대비해서
+	//우선은 쓰기 버퍼의 내용을 플래시해서 디스크에 쓴다
 	if err := s.buf.Flush(); err != nil {
 		return nil, err
 	}
 	size := make([]byte, lenWidth)
+	//ReadAt 메서드는 스토어 파일에서 off 오프셋부터
+	//len(p) 바이트만큼 p 에 넣어준다
 	if _, err := s.File.ReadAt(size, int64(pos)); err != nil {
 		return nil, err
 	}

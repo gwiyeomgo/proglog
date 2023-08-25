@@ -49,14 +49,16 @@ func TestServer(t *testing.T) {
 		nobodyClient api.LogClient,
 		config *Config,
 	){
-		// ...
 		"produce/consume a message to/from the log succeeeds": testProduceConsume,
 		"produce/consume stream succeeds":                     testProduceConsumeStream,
 		"consume past log boundary fails":                     testConsumePastBoundary,
 		"unauthorized fails":                                  testUnauthorized,
 	} {
 		t.Run(scenario, func(t *testing.T) {
-			rootClient, nobodyClient, config, teardown := setupTest(t, nil)
+			rootClient,
+				nobodyClient,
+				config,
+				teardown := setupTest(t, nil)
 			defer teardown()
 			fn(t, rootClient, nobodyClient, config)
 		})
