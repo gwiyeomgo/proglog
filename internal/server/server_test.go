@@ -2,10 +2,12 @@ package server
 
 import (
 	"context"
+	"flag"
 	"io/ioutil"
 	"net"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
@@ -19,9 +21,6 @@ import (
 	api "github.com/gwiyeomgo/proglog/api/v1"
 	"github.com/gwiyeomgo/proglog/internal/auth"
 	"github.com/gwiyeomgo/proglog/internal/log"
-	//(6)start
-	"flag"
-	"time"
 
 	"go.opencensus.io/examples/exporter"
 	"go.uber.org/zap"
@@ -41,7 +40,6 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-// (6)end
 func TestServer(t *testing.T) {
 	for scenario, fn := range map[string]func(
 		t *testing.T,
@@ -49,16 +47,14 @@ func TestServer(t *testing.T) {
 		nobodyClient api.LogClient,
 		config *Config,
 	){
+		// ...
 		"produce/consume a message to/from the log succeeeds": testProduceConsume,
 		"produce/consume stream succeeds":                     testProduceConsumeStream,
 		"consume past log boundary fails":                     testConsumePastBoundary,
 		"unauthorized fails":                                  testUnauthorized,
 	} {
 		t.Run(scenario, func(t *testing.T) {
-			rootClient,
-				nobodyClient,
-				config,
-				teardown := setupTest(t, nil)
+			rootClient, nobodyClient, config, teardown := setupTest(t, nil)
 			defer teardown()
 			fn(t, rootClient, nobodyClient, config)
 		})
@@ -125,7 +121,7 @@ func setupTest(t *testing.T, fn func(*Config)) (
 	require.NoError(t, err)
 
 	authorizer := auth.New(config.ACLModelFile, config.ACLPolicyFile)
-	//(6)start
+
 	var telemetryExporter *exporter.LogExporter
 	if *debug {
 		metricsLogFile, err := os.CreateTemp("", "metrics-*.log")
@@ -145,7 +141,6 @@ func setupTest(t *testing.T, fn func(*Config)) (
 		err = telemetryExporter.Start()
 		require.NoError(t, err)
 	}
-	//(6)end
 	cfg = &Config{
 		CommitLog:  clog,
 		Authorizer: authorizer,
@@ -166,13 +161,11 @@ func setupTest(t *testing.T, fn func(*Config)) (
 		rootConn.Close()
 		nobodyConn.Close()
 		l.Close()
-		//(6)start
 		if telemetryExporter != nil {
 			time.Sleep(1500 * time.Millisecond)
 			telemetryExporter.Stop()
 			telemetryExporter.Close()
 		}
-		//(6)end
 	}
 }
 

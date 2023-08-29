@@ -17,10 +17,10 @@ import (
 	api "github.com/gwiyeomgo/proglog/api/v1"
 	"github.com/gwiyeomgo/proglog/internal/agent"
 	"github.com/gwiyeomgo/proglog/internal/config"
+	"github.com/gwiyeomgo/proglog/internal/loadbalance"
 )
 
 func TestAgent(t *testing.T) {
-	//클라이언트에 전달할 인증서 설정
 	serverTLSConfig, err := config.SetupTLSConfig(config.TLSConfig{
 		CertFile:      config.ServerCertFile,
 		KeyFile:       config.ServerKeyFile,
@@ -29,7 +29,7 @@ func TestAgent(t *testing.T) {
 		ServerAddress: "127.0.0.1",
 	})
 	require.NoError(t, err)
-	//서버들 사이의 인증서 설정을 정의하여 서로 연결하고 복제할 수 있도록
+
 	peerTLSConfig, err := config.SetupTLSConfig(config.TLSConfig{
 		CertFile:      config.RootClientCertFile,
 		KeyFile:       config.RootClientKeyFile,
@@ -55,9 +55,10 @@ func TestAgent(t *testing.T) {
 				agents[0].Config.BindAddr,
 			)
 		}
-		//두번째,세 번째 노드가 첫번째 클러스터에 조인=> 노드가 3개인 클러스터 생성
+
 		agent, err := agent.New(agent.Config{
 			NodeName:        fmt.Sprintf("%d", i),
+			Bootstrap:       i == 0,
 			StartJoinAddrs:  startJoinAddrs,
 			BindAddr:        bindAddr,
 			RPCPort:         rpcPort,
@@ -71,22 +72,16 @@ func TestAgent(t *testing.T) {
 
 		agents = append(agents, agent)
 	}
-	// Shutdown 작동,테스트 데이터 모두 삭제
 	defer func() {
 		for _, agent := range agents {
-			err := agent.Shutdown()
-			require.NoError(t, err)
+			_ = agent.Shutdown()
 			require.NoError(t,
 				os.RemoveAll(agent.Config.DataDir),
 			)
 		}
 	}()
-	//노드들이 서로를 찾을 시간 3초
 	time.Sleep(3 * time.Second)
 
-	//하나의 노드에서 생산과 소비를 할 수 있는지 확인
-	//다른 노드가 레코드를 복제하는지 확인
-	//서버 간 복제는 비동기로 이루어진다
 	leaderClient := client(t, agents[0], peerTLSConfig)
 	produceResponse, err := leaderClient.Produce(
 		context.Background(),
@@ -97,6 +92,10 @@ func TestAgent(t *testing.T) {
 		},
 	)
 	require.NoError(t, err)
+
+	// 복제가 끝날 때까지 기다린다
+	time.Sleep(3 * time.Second)
+
 	consumeResponse, err := leaderClient.Consume(
 		context.Background(),
 		&api.ConsumeRequest{
@@ -105,9 +104,6 @@ func TestAgent(t *testing.T) {
 	)
 	require.NoError(t, err)
 	require.Equal(t, consumeResponse.Record.Value, []byte("foo"))
-
-	// wait until replication has finished
-	time.Sleep(3 * time.Second)
 
 	followerClient := client(t, agents[1], peerTLSConfig)
 	consumeResponse, err = followerClient.Consume(
@@ -119,22 +115,36 @@ func TestAgent(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, consumeResponse.Record.Value, []byte("foo"))
 
+	consumeResponse, err = leaderClient.Consume(
+		context.Background(),
+		&api.ConsumeRequest{
+			Offset: produceResponse.Offset + 1,
+		},
+	)
+	require.Nil(t, consumeResponse)
+	require.Error(t, err)
+	got := grpc.Code(err)
+	want := grpc.Code(api.ErrOffsetOutOfRange{}.GRPCStatus().Err())
+	require.Equal(t, got, want)
 }
 
-// 도우미함수
 func client(
 	t *testing.T,
 	agent *agent.Agent,
 	tlsConfig *tls.Config,
 ) api.LogClient {
 	tlsCreds := credentials.NewTLS(tlsConfig)
-	opts := []grpc.DialOption{grpc.WithTransportCredentials(tlsCreds)}
+	opts := []grpc.DialOption{
+		grpc.WithTransportCredentials(tlsCreds),
+	}
 	rpcAddr, err := agent.Config.RPCAddr()
 	require.NoError(t, err)
 	conn, err := grpc.Dial(fmt.Sprintf(
-		"%s",
+		"%s:///%s",
+		loadbalance.Name,
 		rpcAddr,
 	), opts...)
+
 	require.NoError(t, err)
 	client := api.NewLogClient(conn)
 	return client
