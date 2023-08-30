@@ -2,6 +2,8 @@ package server
 
 import (
 	"context"
+	"google.golang.org/grpc/health"
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 
 	api "github.com/gwiyeomgo/proglog/api/v1"
 
@@ -102,6 +104,16 @@ func NewGRPCServer(config *Config, grpcOpts ...grpc.ServerOption) (
 		//(6)end
 	)
 	gsrv := grpc.NewServer(grpcOpts...)
+	//(10) start
+	/*
+		헬스 체크 프로토콜 지원하는 서비스를 생성
+
+	*/
+	hsrv := health.NewServer()
+	hsrv.SetServingStatus("", healthpb.HealthCheckResponse_SERVING)
+	healthpb.RegisterHealthServer(gsrv, hsrv)
+	//(10) end
+
 	srv, err := newgrpcServer(config)
 	if err != nil {
 		return nil, err

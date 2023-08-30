@@ -3,16 +3,13 @@ package auth
 import (
 	"fmt"
 
-	casbin "github.com/casbin/casbin/v2"
+	"github.com/casbin/casbin"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 func New(model, policy string) *Authorizer {
-	enforcer, err := casbin.NewEnforcer(model, policy)
-	if err != nil {
-		panic(err)
-	}
+	enforcer := casbin.NewEnforcer(model, policy)
 	return &Authorizer{
 		enforcer: enforcer,
 	}
@@ -23,10 +20,7 @@ type Authorizer struct {
 }
 
 func (a *Authorizer) Authorize(subject, object, action string) error {
-	bool, err := a.enforcer.Enforce(subject, object, action)
-	if err != nil {
-		return err
-	} else if !bool {
+	if !a.enforcer.Enforce(subject, object, action) {
 		msg := fmt.Sprintf(
 			"%s not permitted to %s to %s",
 			subject,

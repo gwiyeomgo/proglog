@@ -237,3 +237,60 @@ grpc가 클라이언트를 인증하기 위해서 핸드셰이크를 할 때의 
 핸드셰이크를 하기 전에 다중화해야 하고
 grpc 연결에서 래프트 연결인지를 알아내는 방법이 필요
 
+
+
+* 로컬에서 쿠버네티스로 배포
+
+* 에이전트 명령줄 인터페이스 cli 만들어 서비스 실행
+* 쿠버네티스와 헬름을 준다
+* 우리 서비스가 로컬 머신과 클라우드 플랫폼에서 오케스트레이션을 할 수 있다
+* 로컬 머신에서 서비스를 담은 클러스터를 실행
+* 배포나 서비스 업그레이드와 같은 반복 잡업일 때는 헬름 패키지 매니저나 오퍼레이터를 사용
+
+
+도커 이미지 만들기
+
+헬름 = 쿠버네티스에 서비스를 분산하고 설치하는 패키지 매니저
+서비스 개발자가 서비스의 헬름 차트를 만들고
+공유하면 사람들이 서비스를 사용할 수 있다
+차트 = 헴름 패키지
+릴리즈 = 실행 중인 차트 인스턴스
+저장소 = 차트를 공유하거나,차트를 실행하는 곳
+https://helm.sh/ko/docs/intro/install/
+`curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash`
+
+`brew install helm`
+
+예시로
+helm 으로 비트나미라는 차트 저장소를 설치해보자
+https://charts.bitnami.com
+
+helm repo add bitnami https://charts.bitnami.com/bitnami
+비트나미 저장소를 추가하고
+helm search repo bitnami
+확인
+helm install my-nginx bitnami/nginx
+엔진엑스 차트(nginx)를 설치
+
+엔직엑스 = 웹 서버이자 프록시 서버
+
+helm list
+
+헬름을 이용하여 엔진엑스 클러스터를 쉽게 설치하고 설정할 수 있다
+
+삭제
+helm uninstall my-nginx
+
+
+__
+
+helm template proglog deploy/proglog
+
+helm install proglog deploy/proglog
+kubectl get pods
+파드 목록 볼 수 있음
+
+쿠드 또는 서비스의 포트를 컴퓨터의 포트로 포워딩하게 하기
+로드밸런서가 없어도 쿠버네티스 내부의 서비스에 요청을 보낼 수 있음
+
+kubectl port-forward pod/proglog-0 8400

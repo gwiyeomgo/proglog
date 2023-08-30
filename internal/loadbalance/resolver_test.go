@@ -53,6 +53,8 @@ func TestResolver(t *testing.T) {
 		DialCreds: clientCreds,
 	}
 	r := &loadbalance.Resolver{}
+	//l.Addr().String()
+	// TODO 고치기
 	_, err = r.Build(
 		resolver.Target{
 			URL: url.URL{Path: l.Addr().String()},

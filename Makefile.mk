@@ -75,5 +75,13 @@ compile:
 
 # END: begin
 
+# 도커 빌드
+TAG ?= 0.0.1
+
+build-docker:
+	docker build -t github.com/gwiyeomgo/proglog:$(TAG) .
+# 카이드 클러스터에 빌드한 이미지 생성
+load-docker:
+	kind load docker-image github.com/gwiyeomgo/proglog:$(TAG)
 
 
